@@ -2,7 +2,7 @@
 
 ## Summary
 
-When sending an image inside a `tool_result` content block to OpenRouter's `/api/v1/messages` endpoint (Anthropic-compatible), the model hallucinates and describes a completely different image than what was sent. The same request works correctly when sent directly to Anthropic's API.
+When sending an image inside a `tool_result` content block to OpenRouter's `/api/v1/messages` endpoint, the model hallucinates and describes a completely different image. The same request works correctly on Anthropic's API.
 
 ## The Image
 
@@ -10,66 +10,57 @@ This is `cat.jpg` - an orange tabby cat:
 
 ![cat.jpg](cat.jpg)
 
-## The Bug
+## Quick Repro
 
-When this image is sent inside a `tool_result` block:
+Just clone and run two curl commands:
+
+```bash
+git clone https://github.com/Vercantez/openrouter-image-bug
+cd openrouter-image-bug
+
+# Anthropic (correct - describes orange tabby cat)
+curl -s https://api.anthropic.com/v1/messages \
+  -H "content-type: application/json" \
+  -H "x-api-key: $ANTHROPIC_API_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -d @repro.json | jq -r '.content[0].text'
+
+# OpenRouter (incorrect - hallucinates different image)
+curl -s https://openrouter.ai/api/v1/messages \
+  -H "content-type: application/json" \
+  -H "x-api-key: $OPENROUTER_API_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -d @repro.json | jq -r '.content[0].text'
+```
+
+## The Bug
 
 | API | Response |
 |-----|----------|
 | **Anthropic** | ✅ Consistently "orange tabby cat with golden-yellow eyes" |
 | **OpenRouter** | ⚠️ Inconsistent - sometimes correct, often hallucinates wrong colors/scenes |
 
-**The bug is intermittent.** Running the same request multiple times against OpenRouter yields different results:
+**The bug is intermittent.** Run the OpenRouter curl multiple times - you'll get different results:
 - Sometimes correct: "orange/ginger tabby"
 - Often wrong: "gray tabby", "brown and black coloring", "winter landscape", etc.
 
-Anthropic's API returns consistent, correct results every time.
-
-## Reproduction
-
-### 1. Setup
-
-```bash
-git clone https://github.com/Vercantez/openrouter-image-bug
-cd openrouter-image-bug
-chmod +x generate-repro.sh test.sh
-./generate-repro.sh
-```
-
-### 2. Set API keys
-
-```bash
-export ANTHROPIC_API_KEY="your-key"
-export OPENROUTER_API_KEY="your-key"
-```
-
-### 3. Run test
-
-```bash
-./test.sh
-```
-
 ## Request Structure
 
-The issue occurs when an image is nested inside a `tool_result`:
+The issue is with images nested inside `tool_result` blocks (`repro.json`):
 
 ```json
 {
   "model": "claude-opus-4-5-20251101",
   "max_tokens": 1024,
-  "tools": [
-    {
-      "name": "read_image",
-      "description": "Read an image file from disk",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "path": { "type": "string" }
-        },
-        "required": ["path"]
-      }
+  "tools": [{
+    "name": "read_image",
+    "description": "Read an image file from disk",
+    "input_schema": {
+      "type": "object",
+      "properties": { "path": { "type": "string" } },
+      "required": ["path"]
     }
-  ],
+  }],
   "messages": [
     {
       "role": "user",
@@ -77,33 +68,27 @@ The issue occurs when an image is nested inside a `tool_result`:
     },
     {
       "role": "assistant",
-      "content": [
-        {
-          "type": "tool_use",
-          "id": "toolu_01ABC123",
-          "name": "read_image",
-          "input": { "path": "cat.jpg" }
-        }
-      ]
+      "content": [{
+        "type": "tool_use",
+        "id": "toolu_01ABC123",
+        "name": "read_image",
+        "input": { "path": "cat.jpg" }
+      }]
     },
     {
       "role": "user",
-      "content": [
-        {
-          "type": "tool_result",
-          "tool_use_id": "toolu_01ABC123",
-          "content": [
-            {
-              "type": "image",
-              "source": {
-                "type": "base64",
-                "media_type": "image/jpeg",
-                "data": "<BASE64_IMAGE_DATA>"
-              }
-            }
-          ]
-        }
-      ]
+      "content": [{
+        "type": "tool_result",
+        "tool_use_id": "toolu_01ABC123",
+        "content": [{
+          "type": "image",
+          "source": {
+            "type": "base64",
+            "media_type": "image/jpeg",
+            "data": "<BASE64_DATA_IN_REPRO_JSON>"
+          }
+        }]
+      }]
     }
   ]
 }
@@ -113,25 +98,6 @@ The issue occurs when an image is nested inside a `tool_result`:
 
 - ✅ **Images in direct user messages** work correctly on both APIs
 - ❌ **Images inside `tool_result` blocks** fail only on OpenRouter
-
-This suggests OpenRouter is not correctly passing image data to the upstream model when it's nested inside a tool_result content block.
-
-## Sample Outputs
-
-### Anthropic (Consistently Correct)
-> "This image shows a beautiful orange tabby cat (also known as a ginger or marmalade cat). The cat has striking golden-yellow eyes that are looking slightly to the side, giving it an alert and curious expression..."
-
-### OpenRouter (Inconsistent - varies each run)
-
-Sometimes correct:
-> "I see a photograph of a cat. The cat appears to be an orange/ginger tabby with distinctive striped markings..."
-
-Often incorrect:
-> "Classic tabby stripes with a mix of brown, gray, and black coloring"
-
-> "The cat has beautiful tabby markings with grey/brown striped fur"
-
-> "This image shows a scenic winter landscape photograph. The scene captures a snow-covered mountain..."
 
 ## Environment
 
