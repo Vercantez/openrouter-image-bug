@@ -30,7 +30,7 @@ Anthropic's API returns consistent, correct results every time.
 ### 1. Setup
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/openrouter-image-bug
+git clone https://github.com/Vercantez/openrouter-image-bug
 cd openrouter-image-bug
 chmod +x generate-repro.sh test.sh
 ./generate-repro.sh
