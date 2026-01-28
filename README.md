@@ -38,11 +38,16 @@ curl -s https://openrouter.ai/api/v1/messages \
 | API | Response |
 |-----|----------|
 | **Anthropic** | ✅ Consistently "orange tabby cat with golden-yellow eyes" |
-| **OpenRouter** | ⚠️ Inconsistent - sometimes correct, often hallucinates wrong colors/scenes |
+| **OpenRouter** | ❌ Almost always wrong - hallucinates completely different images |
 
-**The bug is intermittent.** Run the OpenRouter curl multiple times - you'll get different results:
-- Sometimes correct: "orange/ginger tabby"
-- Often wrong: "gray tabby", "brown and black coloring", "winter landscape", etc.
+**The image data appears to be corrupted or ignored.** Run the OpenRouter curl multiple times - you'll get wildly different (wrong) results each time:
+- "Golden Retriever"
+- "sweet potato"
+- "winter landscape with mountains"
+- "gray tabby cat"
+- "I don't see any image"
+
+None of these match the actual image (an orange tabby cat).
 
 ## Request Structure
 
