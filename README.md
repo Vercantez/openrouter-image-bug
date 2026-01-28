@@ -16,8 +16,14 @@ When this image is sent inside a `tool_result` block:
 
 | API | Response |
 |-----|----------|
-| **Anthropic** | ✅ "orange tabby cat with golden-yellow eyes" |
-| **OpenRouter** | ❌ Hallucinates random images (gray cats, winter landscapes, etc.) |
+| **Anthropic** | ✅ Consistently "orange tabby cat with golden-yellow eyes" |
+| **OpenRouter** | ⚠️ Inconsistent - sometimes correct, often hallucinates wrong colors/scenes |
+
+**The bug is intermittent.** Running the same request multiple times against OpenRouter yields different results:
+- Sometimes correct: "orange/ginger tabby"
+- Often wrong: "gray tabby", "brown and black coloring", "winter landscape", etc.
+
+Anthropic's API returns consistent, correct results every time.
 
 ## Reproduction
 
@@ -112,13 +118,20 @@ This suggests OpenRouter is not correctly passing image data to the upstream mod
 
 ## Sample Outputs
 
-### Anthropic (Correct)
+### Anthropic (Consistently Correct)
 > "This image shows a beautiful orange tabby cat (also known as a ginger or marmalade cat). The cat has striking golden-yellow eyes that are looking slightly to the side, giving it an alert and curious expression..."
 
-### OpenRouter (Incorrect - varies each run)
-> "The image shows a gray tabby cat lying comfortably on what appears to be a soft, light-colored blanket..."
+### OpenRouter (Inconsistent - varies each run)
 
-> "This image shows a scenic winter landscape photograph. The scene captures a snow-covered mountain reflected in a perfectly still lake..."
+Sometimes correct:
+> "I see a photograph of a cat. The cat appears to be an orange/ginger tabby with distinctive striped markings..."
+
+Often incorrect:
+> "Classic tabby stripes with a mix of brown, gray, and black coloring"
+
+> "The cat has beautiful tabby markings with grey/brown striped fur"
+
+> "This image shows a scenic winter landscape photograph. The scene captures a snow-covered mountain..."
 
 ## Environment
 
