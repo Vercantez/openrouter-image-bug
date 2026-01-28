@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Generate the repro JSON with the cat image embedded as base64
+# Generate the repro JSON with the test image embedded as base64
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    BASE64_IMAGE=$(base64 -b 0 < cat.jpg)
+    BASE64_IMAGE=$(base64 -b 0 < test.jpg)
 else
-    BASE64_IMAGE=$(base64 -w 0 < cat.jpg)
+    BASE64_IMAGE=$(base64 -w 0 < test.jpg)
 fi
 
 cat > repro.json << HEREDOC
@@ -31,7 +31,7 @@ cat > repro.json << HEREDOC
   "messages": [
     {
       "role": "user",
-      "content": "Read the image at cat.jpg and describe what you see"
+      "content": "Read the image at test.jpg and describe what you see"
     },
     {
       "role": "assistant",
@@ -41,7 +41,7 @@ cat > repro.json << HEREDOC
           "id": "toolu_01ABC123",
           "name": "read_image",
           "input": {
-            "path": "cat.jpg"
+            "path": "test.jpg"
           }
         }
       ]

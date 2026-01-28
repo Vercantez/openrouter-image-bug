@@ -20,7 +20,7 @@
   "messages": [
     {
       "role": "user",
-      "content": "Read the image at cat.jpg and describe what you see"
+      "content": "Read the image at test.jpg and describe what you see"
     },
     {
       "role": "assistant",
@@ -30,7 +30,7 @@
           "id": "toolu_01ABC123",
           "name": "read_image",
           "input": {
-            "path": "cat.jpg"
+            "path": "test.jpg"
           }
         }
       ]

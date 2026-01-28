@@ -6,9 +6,9 @@ When sending an image inside a `tool_result` content block to OpenRouter's `/api
 
 ## The Image
 
-This is `cat.jpg` - an orange tabby cat:
+This is `test.jpg` - an orange tabby cat (filename intentionally doesn't hint at content):
 
-![cat.jpg](cat.jpg)
+![test.jpg](test.jpg)
 
 ## Quick Repro
 
@@ -64,7 +64,7 @@ The issue is with images nested inside `tool_result` blocks (`repro.json`):
   "messages": [
     {
       "role": "user",
-      "content": "Read the image at cat.jpg and describe what you see"
+      "content": "Read the image at test.jpg and describe what you see"
     },
     {
       "role": "assistant",
@@ -72,7 +72,7 @@ The issue is with images nested inside `tool_result` blocks (`repro.json`):
         "type": "tool_use",
         "id": "toolu_01ABC123",
         "name": "read_image",
-        "input": { "path": "cat.jpg" }
+        "input": { "path": "test.jpg" }
       }]
     },
     {

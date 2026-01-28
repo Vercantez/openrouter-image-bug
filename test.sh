@@ -24,7 +24,7 @@ echo "=============================================="
 echo "Testing image in tool_result handling"
 echo "=============================================="
 echo ""
-echo "The image is: cat.jpg (an orange tabby cat)"
+echo "The image is: test.jpg (an orange tabby cat)"
 echo ""
 
 if [ -z "$SKIP_ANTHROPIC" ]; then
@@ -38,13 +38,15 @@ if [ -z "$SKIP_ANTHROPIC" ]; then
 fi
 
 if [ -z "$SKIP_OPENROUTER" ]; then
-    echo "=== OPENROUTER API ==="
-    curl -s https://openrouter.ai/api/v1/messages \
-        -H "content-type: application/json" \
-        -H "x-api-key: $OPENROUTER_API_KEY" \
-        -H "anthropic-version: 2023-06-01" \
-        -d @repro.json | jq -r '.content[0].text'
-    echo ""
+    for i in 1 2 3 4 5; do
+        echo "=== OPENROUTER API (Run $i/5) ==="
+        curl -s https://openrouter.ai/api/v1/messages \
+            -H "content-type: application/json" \
+            -H "x-api-key: $OPENROUTER_API_KEY" \
+            -H "anthropic-version: 2023-06-01" \
+            -d @repro.json | jq -r '.content[0].text' | head -5
+        echo ""
+    done
 fi
 
 echo "=============================================="
