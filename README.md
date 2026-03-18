@@ -1,8 +1,10 @@
-# OpenRouter Bug: Images in tool_result are corrupted/ignored
+# OpenRouter Bug: Images in tool_result were corrupted/ignored [FIXED]
+
+> **Status: FIXED** — This bug has been resolved by OpenRouter. The repro below is kept for reference.
 
 ## Summary
 
-When sending an image inside a `tool_result` content block to OpenRouter's `/api/v1/messages` endpoint, the model hallucinates and describes a completely different image. The same request works correctly on Anthropic's API.
+When sending an image inside a `tool_result` content block to OpenRouter's `/api/v1/messages` endpoint, the model used to hallucinate and describe a completely different image. The same request always worked correctly on Anthropic's API. This has since been fixed.
 
 ## The Image
 
@@ -25,7 +27,7 @@ curl -s https://api.anthropic.com/v1/messages \
   -H "anthropic-version: 2023-06-01" \
   -d @repro.json | jq -r '.content[0].text'
 
-# OpenRouter (incorrect - hallucinates different image)
+# OpenRouter (now also correct)
 curl -s https://openrouter.ai/api/v1/messages \
   -H "content-type: application/json" \
   -H "x-api-key: $OPENROUTER_API_KEY" \
@@ -33,25 +35,25 @@ curl -s https://openrouter.ai/api/v1/messages \
   -d @repro.json | jq -r '.content[0].text'
 ```
 
-## The Bug
+## The Bug (now fixed)
 
-| API | Response |
-|-----|----------|
-| **Anthropic** | ✅ Consistently "orange tabby cat with golden-yellow eyes" |
-| **OpenRouter** | ❌ Almost always wrong - hallucinates completely different images |
+| API | Previous Response | Current Response |
+|-----|-------------------|------------------|
+| **Anthropic** | ✅ Consistently "orange tabby cat with golden-yellow eyes" | ✅ Same |
+| **OpenRouter** | ❌ Almost always wrong - hallucinated completely different images | ✅ Now correctly describes the image |
 
-**The image data appears to be corrupted or ignored.** Run the OpenRouter curl multiple times - you'll get wildly different (wrong) results each time:
+**The image data was being corrupted or ignored.** Running the OpenRouter curl multiple times used to produce wildly different (wrong) results:
 - "Golden Retriever"
 - "sweet potato"
 - "winter landscape with mountains"
 - "gray tabby cat"
 - "I don't see any image"
 
-None of these match the actual image (an orange tabby cat).
+None of these matched the actual image (an orange tabby cat).
 
 ## Request Structure
 
-The issue is with images nested inside `tool_result` blocks (`repro.json`):
+The issue was with images nested inside `tool_result` blocks (`repro.json`):
 
 ```json
 {
@@ -101,11 +103,12 @@ The issue is with images nested inside `tool_result` blocks (`repro.json`):
 
 ## Key Finding
 
-- ✅ **Images in direct user messages** work correctly on both APIs
-- ❌ **Images inside `tool_result` blocks** fail only on OpenRouter
+- ✅ **Images in direct user messages** worked correctly on both APIs
+- ❌ **Images inside `tool_result` blocks** failed only on OpenRouter (now fixed)
 
 ## Environment
 
 - Model: `claude-opus-4-5-20251101`
 - OpenRouter endpoint: `https://openrouter.ai/api/v1/messages`
 - Date discovered: 2026-01-28
+- Date fixed: 2026-03-18
